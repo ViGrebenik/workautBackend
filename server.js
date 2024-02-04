@@ -1,21 +1,36 @@
-import express from 'express'
+import cors from 'cors'
 import dotenv from 'dotenv'
+import express from 'express'
 import morgan from 'morgan'
+import path from 'path'
 
-import router from './app/auth/auth.routes.js'
+import { errorHandler, notFound } from './app/middleware/error.middleware.js'
+
+import authRouter from './app/auth/auth.routes.js'
+import exercise from './app/exercise/exercise.routes.js'
+import userRoutes from './app/user/user.routes.js'
+
 import { prisma } from './app/prisma.js'
-
-const app = express()
 
 dotenv.config()
 
+const app = express()
+
 async function main() {
+	if (process.env.NODE_ENV === 'development') app.use(morgan('dev'))
 	const PORT = process.env.PORT || 5000
 
-	if (process.env.NODE_ENV === 'development') app.use(morgan('dev'))
-
 	app.use(express.json())
-	app.use('/api/auth', router)
+
+	const __dirname = path.resolve()
+	app.use('/uploads', express.static(path.join(__dirname, './uploads/')))
+	app.use(cors())
+	app.use('/api/auth', authRouter)
+	app.use('/api/users', userRoutes)
+	app.use('/api/exercises', exercise)
+
+	app.use(notFound)
+	app.use(errorHandler)
 
 	app.listen(
 		PORT,
