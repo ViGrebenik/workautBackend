@@ -3,43 +3,40 @@ import { hash, verify } from 'argon2'
 import asyncHandler from 'express-async-handler'
 
 import { prisma } from '../prisma.js'
+import { UserFields } from '../utils/user.utils.js'
 
 import { generateToken } from './generate-token.js'
-import { UserFields } from '../utils/user.utils.js'
 
 export const authUser = asyncHandler(async (req, res) => {
 	const { email, password } = req.body
+
 	const user = await prisma.user.findUnique({
 		where: {
 			email
 		}
 	})
 
-	if (user) {
-		const isValidPassword = await verify(user.password, password)
-		if (isValidPassword) {
-			const token = generateToken(user.id)
-			res.json({ user, token })
-		} else {
-			res.status(401)
-			throw new Error('Email and password are not correct')
-		}
+	const isValidPassword = await verify(user.password, password)
+
+	if (user && isValidPassword) {
+		const token = generateToken(user.id)
+		res.json({ user, token })
 	} else {
 		res.status(401)
-		throw new Error('User not found')
+		throw new Error('Email and password are not correct')
 	}
 })
 
 export const registerUser = asyncHandler(async (req, res) => {
 	const { email, password } = req.body
 
-	const isHAveUser = await prisma.user.findUnique({
+	const isHaveUser = await prisma.user.findUnique({
 		where: {
 			email
 		}
 	})
 
-	if (isHAveUser) {
+	if (isHaveUser) {
 		res.status(400)
 		throw new Error('User already exists')
 	}
@@ -48,7 +45,8 @@ export const registerUser = asyncHandler(async (req, res) => {
 		data: {
 			email,
 			password: await hash(password),
-			name: faker.person.firstName()
+			name: faker.name.fullName(),
+			images: ['/images/before.jpg', '/images/after.jpg']
 		},
 		select: UserFields
 	})

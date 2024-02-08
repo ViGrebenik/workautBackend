@@ -7,8 +7,9 @@ import path from 'path'
 import { errorHandler, notFound } from './app/middleware/error.middleware.js'
 
 import authRouter from './app/auth/auth.routes.js'
-import exercise from './app/exercise/exercise.routes.js'
+import exerciseRoutes from './app/exercise/exercise.routes.js'
 import userRoutes from './app/user/user.routes.js'
+import workoutsRoutes from './app/workout/workout.routes.js'
 
 import { prisma } from './app/prisma.js'
 
@@ -27,7 +28,8 @@ async function main() {
 	app.use(cors())
 	app.use('/api/auth', authRouter)
 	app.use('/api/users', userRoutes)
-	app.use('/api/exercises', exercise)
+	app.use('/api/exercises', exerciseRoutes)
+	app.use('/api/workouts', workoutsRoutes)
 
 	app.use(notFound)
 	app.use(errorHandler)
